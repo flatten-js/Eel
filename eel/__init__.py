@@ -34,6 +34,9 @@ _shutdown = None
 # Can be overridden through `eel.init` with the kwarg `js_result_timeout` (default: 10000)
 _js_result_timeout = 10000
 
+# A set of files under the folder specified as the root
+_dist = ''
+
 # All start() options must provide a default value and explanation here
 _start_args = {
     'mode':             'chrome',                   # What browser is used
@@ -103,8 +106,9 @@ EXPOSED_JS_FUNCTIONS = pp.ZeroOrMore(
 
 def init(path, allowed_extensions=['.js', '.html', '.txt', '.htm',
                                    '.xhtml', '.vue'], js_result_timeout=10000):
-    global root_path, _js_functions, _js_result_timeout
+    global root_path, _js_functions, _js_result_timeout, _dist
     root_path = _get_real_path(path)
+    _dist = '|'.join(os.listdir(root_path))
 
     js_functions = set()
     for root, _, files in os.walk(root_path):
@@ -216,8 +220,13 @@ def _eel():
 def _root():
     return _static(_start_args['default_path'])
 
+def is_route(path):
+    return not rgx.match(_dist, path)
+
 def _static(path):
     response = None
+    path = _start_args['default_path'] if _start_args['spa'] and is_route(path) else path
+
     if 'jinja_env' in _start_args and 'jinja_templates' in _start_args:
         template_prefix = _start_args['jinja_templates'] + '/'
         if path.startswith(template_prefix):
