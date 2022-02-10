@@ -159,6 +159,10 @@ eel = {
 
             };
         });
+    },
+
+    onclose: function(cb) {
+      eel._websocket.onclose = cb
     }
 };
 
